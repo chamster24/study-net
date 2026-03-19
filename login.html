@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+</head>
+<body style="margin: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh;">
+  <h1>Login to StudyNet</h1>
+  <br>
+  <form id="loginform" onsubmit="event.preventDefault();">
+    <label for="email">Email: </label><input type="email" id="email" name="email" placeholder="Email" required>
+  
+    <br><label for="password">Password (a-z &amp; 0-9): </label><input type="password" id="password" name="password" pattern="[a-zA-Z0-9]+" placeholder="Password" required>
+    <br>
+    <br><button type="submit" id="loginbtn" onclick="sendlogin()">Login</button>&nbsp&nbsp&nbsp<button type="submit" id="registerbtn" onclick="register()">Register</button>
+    <br>
+  </form>
+  <br>
+  <br>
+  <button onclick="guestlogin()">Continue as Guest</button>
+</body>
+<script>
+
+  function verifypassword() {
+    const InvalidPassword = /[^a-zA-Z0-9]/.test(document.getElementById("password").value);
+    if (InvalidPassword) {
+      return false;
+    } else {
+      return true;
+    }
+  }
+  function sendlogin() {
+    if (!document.getElementById("loginform").checkValidity()) {
+      document.getElementById("loginform").reportValidity(); 
+      return;
+    }
+    if (verifypassword() == false) {
+      alert("INVALID PASSWORD!")
+      return;
+    }
+    localStorage.setItem("Email", String(document.getElementById("email").value));
+    localStorage.setItem("Password", String(document.getElementById("password").value));
+    localStorage.setItem("SecureSessionKey", "AWAITING");
+    localStorage.setItem("UserID", "AWAITING");
+    localStorage.setItem("LoginConfirmed", "AWAITING");
+    console.log("Login data cached, awaiting server verification...")
+  }
+  function guestlogin() {
+    localStorage.setItem("Email", "Guest");
+    localStorage.setItem("Password", "Guest");
+    localStorage.setItem("SecureSessionKey", "AWAITING");
+    localStorage.setItem("UserID", "*GUEST");
+    localStorage.setItem("LoginConfirmed", "GUEST");
+    console.log("Login data cached, awaiting server verification...")
+  }
+  function register() {
+    alert("Registering is not available yet!");
+  }
+</script>
+</html>
