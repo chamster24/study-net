@@ -56,10 +56,14 @@ incognitoBtn.addEventListener("click", () => { //maybe add icognito mode toggle 
 
 //save info for username and room code fields
 username.addEventListener("input", () => {
-  localStorage.setItem("username", username.value);
+  if (incognitoMode === 0) {
+    localStorage.setItem("username", username.value);
+  };
 });
 roomCode.addEventListener("input", () => {
-  localStorage.setItem("roomCode", roomCode.value);
+  if (incognitoMode === 0) {
+    localStorage.setItem("roomCode", roomCode.value);
+  };
 });
 
 //Login script
