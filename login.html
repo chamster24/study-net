@@ -9,9 +9,11 @@
   <form id="loginform" onsubmit="event.preventDefault();">
     <label for="email">Email: </label><input type="email" id="email" name="email" placeholder="Email" required>
   
-    <br><label for="password">Password (a-z &amp; 0-9): </label><input type="password" id="password" name="password" pattern="[a-zA-Z0-9]+" placeholder="Password" required>
+    <br><label for="password">Password (8 characters minimum): </label><input type="password" id="password" name="password" minlength="8" placeholder="Password" required> <!-- Although there is a input field check, there is also a JS clientside and a serverside check, just in case. -->
     <br>
-    <br><button type="submit" id="loginbtn" onclick="sendlogin()">Login</button>&nbsp&nbsp&nbsp<button type="submit" id="registerbtn" onclick="register()">Register</button>
+    <br> <input type="checkbox" id="cachelogin">
+    <br>
+    <br><button type="submit" id="loginbtn" onclick="sendlogin()">Login</button>&nbsp&nbsp&nbsp<button type="button" id="registerbtn" onclick="register()">Register</button>
     <br>
   </form>
   <br>
@@ -21,39 +23,54 @@
 <script>
 
   function verifypassword() {
-    const InvalidPassword = /[^a-zA-Z0-9]/.test(document.getElementById("password").value);
+    // REMOVED: const InvalidPassword = /[^a-zA-Z0-9~`!@#$%^&*()_+\-=\[\]{};:\\|,.<>\/?]/.test(document.getElementById("password").value); // Checks if input contains characters which are NOT in the regex, and verifies it. Characters " and ' banned, just in case.
+    // Removal Reason: To allow the user to type any character, including unicode, as their password - ensuring safety
     if (InvalidPassword) {
       return false;
     } else {
       return true;
     }
   }
-  function sendlogin() {
-    if (!document.getElementById("loginform").checkValidity()) {
+  function sendlogin() { // TODO: Add so that on 3+ failed logins, force a HCaptcha.
+    if (!document.getElementById("loginform").checkValidity()) { // Checks if it meets the HTML regex, and informs the user of the check status if it fails.
       document.getElementById("loginform").reportValidity(); 
       return;
     }
+    /* Disabled
     if (verifypassword() == false) {
-      alert("INVALID PASSWORD!")
+      alert("Invalid password!\n\nPlease note that quotation marks, such as \" and \', are not allowed.")
       return;
     }
-    localStorage.setItem("Email", String(document.getElementById("email").value));
-    localStorage.setItem("Password", String(document.getElementById("password").value));
-    localStorage.setItem("SecureSessionKey", "AWAITING");
-    localStorage.setItem("UserID", "AWAITING");
-    localStorage.setItem("LoginConfirmed", "AWAITING");
-    console.log("Login data cached, awaiting server verification...")
+    */
+
+    if (document.getElementById("cachelogin").checked) {
+      localStorage.setItem("Email", String(document.getElementById("email").value));
+      localStorage.setItem("SessionKey", "*AWAITING");
+      localStorage.setItem("UserID", "*AWAITING");
+      localStorage.setItem("LoginConfirmed", "*AWAITING");
+      console.log("Login data cached, awaiting server verification...") 
+    } else {
+      sessionStorage.setItem("Email", String(document.getElementById("email").value));
+      sessionStorage.setItem("SessionKey", "*AWAITING");
+      sessionStorage.setItem("UserID", "*AWAITING");
+      sessionStorage.setItem("LoginConfirmed", "*AWAITING");
+      console.log("Login data cached for this session, awaiting server verification...") 
+    }
+
+    // TODO: send to server
   }
   function guestlogin() {
-    localStorage.setItem("Email", "Guest");
-    localStorage.setItem("Password", "Guest");
-    localStorage.setItem("SecureSessionKey", "AWAITING");
+    localStorage.setItem("Email", "*GUEST");
+    localStorage.setItem("SecureSessionKey", "*GUEST");
     localStorage.setItem("UserID", "*GUEST");
-    localStorage.setItem("LoginConfirmed", "GUEST");
-    console.log("Login data cached, awaiting server verification...")
+    localStorage.setItem("LoginConfirmed", "*GUEST");
+    console.log("Logged in as a guest.")
   }
   function register() {
     alert("Registering is not available yet!");
+
+    // ACTUALLY, make a seperate page for registeration with HCaptcha.
+    // alert("Registered! Please press login to login.");
   }
 </script>
 </html>
