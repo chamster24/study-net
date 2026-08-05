@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    
+  <title>StudyNet - Login</title>
 </head>
 <body style="margin: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh;">
   <h1>Login to StudyNet</h1>
@@ -11,9 +11,11 @@
   
     <br><label for="password">Password (8 characters minimum): </label><input type="password" id="password" name="password" minlength="8" placeholder="Password" required> <!-- Although there is a input field check, there is also a JS clientside and a serverside check, just in case. -->
     <br>
-    <br> <input type="checkbox" id="cachelogin">
+    <br><label for="longlogin">Cache my login info: </label><input type="checkbox" id="cachelogin">
+    <br><label for="longlogin">Keep me logged in for longer: </label><input type="checkbox" id="cachelogin">
     <br>
-    <br><button type="submit" id="loginbtn" onclick="sendlogin()">Login</button>&nbsp&nbsp&nbsp<button type="button" id="registerbtn" onclick="register()">Register</button>
+    <br><button type="submit" id="loginbtn" onclick="sendlogin()">Login</button>
+    <br><button type="button" id="registerbtn" onclick="register()">Register</button>
     <br>
   </form>
   <br>
@@ -21,19 +23,21 @@
   <button onclick="guestlogin()">Continue as Guest</button>
 </body>
 <script>
+  const FRM_loginform = document.getElementById("loginform");
+  const CHK_cachelogin = document.getElementById("cachelogin");
+  const CHK_longlogin = document.getElementById("longlogin");
 
-  function verifypassword() {
-    // REMOVED: const InvalidPassword = /[^a-zA-Z0-9~`!@#$%^&*()_+\-=\[\]{};:\\|,.<>\/?]/.test(document.getElementById("password").value); // Checks if input contains characters which are NOT in the regex, and verifies it. Characters " and ' banned, just in case.
-    // Removal Reason: To allow the user to type any character, including unicode, as their password - ensuring safety
-    if (InvalidPassword) {
-      return false;
-    } else {
-      return true;
-    }
-  }
+  // REMOVED: function verifypassword() { // Removal Reason: To allow the user to type any character, including unicode, as their password - ensuring safety
+    //const InvalidPassword = /[^a-zA-Z0-9~`!@#$%^&*()_+\-=\[\]{};:\\|,.<>\/?]/.test(document.getElementById("password").value); // Checks if input contains characters which are NOT in the regex, and verifies it. Characters " and ' banned, just in case.
+    //if (InvalidPassword) {
+    //  return false;
+    //} else {
+    //  return true;
+    //}
+  //}
   function sendlogin() { // TODO: Add so that on 3+ failed logins, force a HCaptcha.
-    if (!document.getElementById("loginform").checkValidity()) { // Checks if it meets the HTML regex, and informs the user of the check status if it fails.
-      document.getElementById("loginform").reportValidity(); 
+    if (!FRM_loginform.checkValidity()) { // Checks if it meets the HTML regex, and informs the user of the check status if it fails.
+      FRM_loginform.reportValidity(); 
       return;
     }
     /* Disabled
@@ -43,7 +47,7 @@
     }
     */
 
-    if (document.getElementById("cachelogin").checked) {
+    if (CHK_cachelogin.checked) {
       localStorage.setItem("Email", String(document.getElementById("email").value));
       localStorage.setItem("SessionKey", "*AWAITING");
       localStorage.setItem("UserID", "*AWAITING");
@@ -67,10 +71,7 @@
     console.log("Logged in as a guest.")
   }
   function register() {
-    alert("Registering is not available yet!");
-
-    // ACTUALLY, make a seperate page for registeration with HCaptcha.
-    // alert("Registered! Please press login to login.");
+    window.location.href = "register.html";
   }
 </script>
 </html>

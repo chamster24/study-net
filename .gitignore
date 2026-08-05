@@ -1,0 +1,15 @@
+# Environment variables
+.env
+*.env
+
+# Virtual Enviroments
+venv/
+
+# Testing Stuff
+*.db
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
