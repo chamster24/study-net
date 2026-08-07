@@ -9,7 +9,7 @@ import secrets # Base keys for JWT to generate JSON Web Tokens
 from sqlmodel import SQLModel, Field, Session, create_engine, select # DB
 from datetime import datetime, timezone, timedelta # JWT Session Key expiry
 
-from routers import auth # Imports all FastAPI router scripts
+from routers import auth, intrachat # Imports all FastAPI router scripts
 
 # Sets up FastAPI
 app = fastapi.FastAPI()
