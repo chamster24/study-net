@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!-- Copyright 2026 cHamster24 -->
+  <title>IntrAChat</title>
+  <link rel="icon" type="image/x-icon" href="/assets/intrachat/favicon.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+
+  <!-- Login Page -->
+  <div id="loginPage" style="display: flex; height: 100vh; flex-direction: column; justify-content: center; align-items: center;">
+    <!-- Temp Notice Start -->
+    <!-- Temp notice end -->
+    <h1 style="color: black; margin: 0 0 10px 0; font-size: 2.5em; text-align: center;">IntrAChat</h1>
+    <p><i>Absolute anarchy, no moderation.</i></p>
+    <h2>Login</h2>
+    <input type="text" id="username" maxlength="16" placeholder="Enter your username (any username works!)">
+    <p style="text-align: center;"><i>Username should only contain letters, numbers, underscores(_), and hyphens (-).
+      <br>Your username is NOT linked to any account of any kind, but the same username may not appear in 2 rooms at the same time.</i></p>
+    <input type="text" id="roomCode" maxlength="10" placeholder="Enter your room code">
+    <p style="text-align: center;"><i>Room Code should only contain letters and numbers.
+    <br>Your Room Code is NOT case sensitive. That means "ABCD" and "abcd" will lead you to the same room.</i></p>
+    <label>
+      <input type="checkbox" id="over13Chb" value="1"> I agree that I'm over 13.
+    </label>
+    <label>
+      <input type="checkbox" id="PPandTOUchb" value="1">I accept the <a href="termsofuse.html" target="_blank" rel="noopener noreferrer">terms of use</a> and <a href="privacypolicy.html" target="_blank" rel="noopener noreferrer">privacy policy</a>.
+  </label>
+    <br>
+    <button id="incognitoBtn">❌ Incognito Mode</button>&nbsp;<button id="loginBtn">Join Room</button>
+    
+    <footer>
+      <hr style="width: 90%; margin-left: auto; margin-right: auto; border: none; height: 5px; background-color: blue;">
+      <p style="text-align: center;">&copy; 2025 IntraChat. All rights reserved.&nbsp;&nbsp;&nbsp;Version: <span id="version">UnknownVer</span></p>
+      <p style="text-align: center;"><a href="index.html" target="_blank" rel="noopener noreferrer">Main (Login) Page</a>&nbsp;&nbsp;&nbsp;<a href="about.html" target="_blank" rel="noopener noreferrer">About</a>&nbsp;&nbsp;&nbsp;<a href="termsofuse.html" target="_blank" rel="noopener noreferrer">Terms of Use</a>&nbsp;&nbsp;&nbsp;<a href="privacypolicy.html" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
+      <br><a href="https://github.com/chamster24/intra-chat/" target="_blank" rel="noopener noreferrer">View Source (Github)</a>&nbsp;&nbsp;&nbsp;<a href="https://stats.uptimerobot.com/FRtdhhA3pf" target="_blank" rel="noopener noreferrer">Site Status (Uptime Robot)</a>
+    </footer>
+  </div>
+
+  <!-- Chat Page -->
+  <div id="chatPage" style="display:none;">
+    <h2 id="chatPageInfo" style="text-align: center;">Connecting to server.</h2>
+    <br>
+    <!-- Message container -->
+    <div id="messageBox" style="border:1px solid #ccc; height:300px; overflow-y:auto; padding:10px; margin:10px 0;">
+    </div>
+    <br>
+    <input type="text" id="chatInput" maxlength="500" placeholder="Type your message here. Press Enter to send your message." style="width:70%;">
+    <span id="charCount" style="margin-left: 10px;">0 / 500</span>
+  </div>
+
+  <!-- Clientside code -->
+  <script src="script.js" defer></script>
+</body>
+</html>

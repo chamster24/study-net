@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 
-# Authencation - e.g. login, register
+# IntraChat App Router
 
 import fastapi
 
 # Sets the router for this script to /api/auth
 router = fastapi.APIRouter(
-    prefix="/auth", 
-    tags=["Authentication"]
+    prefix="/intrachat", 
+    tags=["IntraChat"]
 )
