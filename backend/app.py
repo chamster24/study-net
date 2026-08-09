@@ -10,6 +10,8 @@ from sqlmodel import SQLModel, Field, Session, create_engine, select # DB
 from datetime import datetime, timezone, timedelta # JWT Session Key expiry
 
 from routers import auth, intrachat # Imports all FastAPI router scripts
+import database as db
+import security as sc
 
 # Sets up FastAPI
 app = fastapi.FastAPI()
@@ -18,7 +20,7 @@ app = fastapi.FastAPI()
 api_router = fastapi.APIRouter(prefix="/api")
 
 # Scripts to connect with routers
-api_router.include_router(auth.router)
+api_router.include_router(auth.router) # This needs to be repeated for each router (TODO)
 app.include_router(api_router)
 
 @app.get("/")
