@@ -46,7 +46,7 @@ def checkpassword(raw_password, hashed_password):
 # JWT
 SECRET_KEY = secrets.token_hex(32) # TODO: make the secret permanent via os.getenv
 
-def generateJWT(JWT_UUID, JWT_Username):
+def generateJWT(JWT_UUID, JWT_Username): # Called by database.py/addjwtid()
     payload = {
         "iss": "StudyNet", # Issuer
         "version": str(version), # Custom field - version (To ensure that the user can not relogin if the backend updates, to prevent edge case errors)
@@ -62,5 +62,14 @@ def generateJWT(JWT_UUID, JWT_Username):
 
     return {"token": token, "jti": payload["jti"]} # EXP field is not NEEDED given the fact that JTI uses UUID7.
 
-def decodeJWT(key):
-    pass
+def verifyJWT(token):
+    try:
+        # Uses JWT to automatically decode the JWT
+        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        return {"status": True, "data": payload}
+    except jwt.ExpiredSignatureError:
+        return {"status": False, "details": "expired"}
+    except jwt.InvalidTokenError:
+        return {"status": False, "details": "invalid"}
+    except Exception:
+        return {"status": False, "details": "other"}

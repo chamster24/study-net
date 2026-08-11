@@ -22,6 +22,9 @@
     ## Database.py
         - "in db, code so that using the given exp, autoexpire the jti once the time is up. This will also be useful for "Log me out on all devices" (security.py)
         - "# TODO: Initialize SQLModel"
+        - Optimize changeuseraccountinfo() and make it more secure (# TODO)
+        - fix adduser() ("# TODO: Fix so that instead of returning none, it just doesnt return that line.")
+        - Auto delete old JWTs
 
 # StudyNet FRONTEND
     ## Login.html
