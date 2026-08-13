@@ -4,7 +4,7 @@
 
 import fastapi
 
-# Sets the router for this script to /api/auth
+# Sets the router for this script to /api/intrachat
 router = fastapi.APIRouter(
     prefix="/intrachat", 
     tags=["IntraChat"]

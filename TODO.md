@@ -32,3 +32,11 @@
         - Force a HCaptcha on 3+ failed attempts
 
 - (!!) Fill out procfile (root)
+
+## config.toml
+    - Make a default
+    - Fill out fields
+    - Current Fields:
+    {
+        "sqlite_url": "`default`" # Str, must have url prefix
+    }

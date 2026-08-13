@@ -6,6 +6,7 @@ from sqlmodel import SQLModel, Field, Session, create_engine, select # DB
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from uuid import uuid4 # Needed to prevent naming conficts in db_users.uuid
+import tomllib # Config file parsing
 
 
 import security as sec
@@ -13,16 +14,31 @@ import security as sec
 
 # --------------------
 # Logging
-def log(message: str, level: int | None = None, perm: bool = False):
+def log(message: str, level: int | None = None, perm: bool = False): #TODO: Rewrite to be better, add datetime
     log_file = script_dir.parent / "logs" / "database_log.txt"
     LEVEL_PREFIXES = {
-        0: "        | ",
-        1: "[LOG]   | ",
-        2: "[WARN]  | ",
-        3: "[ERROR] | ",
+        # Fine-grained / Verbose Diagnostic (0-2)
+        0: "       | ",  # Plain continuation / indent
+        1: "[TRACE] | ",  # Line-by-line execution details
+        2: "[DEBUG] | ",  # Developer troubleshooting info
+        # Operational (3-4)
+        3: "[INFO]  | ",  # Standard operational status
+        4: "[LOG]   | ",  # Generic log entry
+        # Non-fatal warnings (5-6)
+        5: "[NOTIC] | ",  # Significant event, not an error
+        6: "[WARN]  | ",  # Something unexpected happened
+        # Failures (7-9)
+        7: "[ERROR] | ",  # Error
+        8: "[CRIT]  | ",  # Critical error
+        9: "[FATAL] | ",  # Fatal crash
+        
+        # Extras / Custom (10+)
+        10: "[AUDIT] | ", # 
+        11: "[PERF]  | ", # Performance
     }
     eval_level = LEVEL_PREFIXES.get(level, "        | " if perm else "")
-    # eval_level = lambda level, perm: "[LOG]   | " if level == 1 else ("[WARN]  | " if level == 2 else ("[ERROR] | " if level == 3 else ("        | " if (level == 0) or (perm) else (""))))
+
+
     loggedmessage = eval_level + message
     if perm:
         log_file.parent.mkdir(parents=True, exist_ok=True)  # Ensures the "logs" folder exists
@@ -108,6 +124,8 @@ def deleteuser():
 # TODO: Optimize and make safer. Also, change input() to something like curses() so that uvicorn doesnt accidently freeze.
 # IMPORTANT: for now, do NOT use terminal_override
 def changeuseraccountinfo(subject_uuid, field, updvalue,initiating_jwt: str, admin_perms=False, terminal_override=False):
+    pass
+    """
     ALLOWED_USER_FIELDS = {"username", "display_name", "email"} # Safeguarding
     ALLOWED_ADMIN_FIELDS = ALLOWED_USER_FIELDS | {"uuid", "usernum", "password", "creation_datetime"}
     ALLOWED_TERMINAL_FIELDS = ALLOWED_ADMIN_FIELDS | {"flags"}
@@ -115,45 +133,45 @@ def changeuseraccountinfo(subject_uuid, field, updvalue,initiating_jwt: str, adm
         if admin_perms and not terminal_override: # AdminMode
             jwtresult = checkjwt(initiating_jwt)
             if jwtresult["status"] != "valid": # AdminMode, Invalid JWT
-                log(f"ABORTED - An admin tried changing Field \"{field}\" for UUID \"{subject_uuid}\", but had an invalid JWT.", level=2, perm=True)
+                log(f"ABORTED - An admin tried changing Field \"{field}\" for UUID \"{subject_uuid}\", but had an invalid JWT.", level=5, perm=True)
                 return 3
             else: # AdminMode, Valid JWT
-                uuidresult = getuserbyuuid(jwtresult["sub"])
+                uuidresult = getuserbyuuid(jwtresult["jwtdata"]["sub"])
                 if not (",admin," in uuidresult["flags"]): # AdminMode, Valid JWT, Invalid Adminship
-                    log(f"ABORTED - An non-admin tried changing Field \"{field}\" for UUID \"{subject_uuid}\".", level=2, perm=True)
+                    log(f"ABORTED - An non-admin tried changing Field \"{field}\" for UUID \"{subject_uuid}\".", level=5, perm=True)
                     return 3
                 else: # AdminMode, Valid JWT, Valid Adminship
                     pass # All OK!
         elif not terminal_override: # RegMode
             jwtresult = checkjwt(initiating_jwt, uuid=None, jti=None) # TODO: expects 3 arguements
             if jwtresult["status"] != "valid": # RegMode, Invalid JWT
-                log(f"ABORTED - Someone tried changing Field \"{field}\" for UUID \"{subject_uuid}\", but had an invalid JWT.", level=2, perm=True)
+                log(f"ABORTED - Someone tried changing Field \"{field}\" for UUID \"{subject_uuid}\", but had an invalid JWT.", level=5, perm=True)
                 return 4
             else: # RegMode, Valid JWT
-                if not (subject_uuid == jwtresult["sub"]): # RegMode, Valid JWT, Invalid User
-                    log(f"ABORTED - A different user (\"{jwtresult['sub']}\") tried changing Field \"{field}\" for UUID \"{subject_uuid}\".", level=2, perm=True)
+                if not (subject_uuid == jwtresult["jwtdata"]["sub"]): # RegMode, Valid JWT, Invalid User
+                    log(f"ABORTED - A different user (\"{jwtresult['sub']}\") tried changing Field \"{field}\" for UUID \"{subject_uuid}\".", level=5, perm=True)
                     return 4
                 else: # RegMode, Valid JWT, Valid User
                     pass # All OK!
 
         if not (field in ALLOWED_ADMIN_FIELDS): # Final check - is it allowed?
             if not terminal_override:
-                log(f"ABORTED - UUID (\"{jwtresult["sub"]}\") tried changing Field \"{field}\" for UUID \"{subject_uuid}\", which was NOT permitted by ALLOWED_ADMIN_FIELDS and ", level=2, perm=True)
+                log(f"ABORTED - UUID (\"{jwtresult["jwtdata"]["sub"]}\") tried changing Field \"{field}\" for UUID \"{subject_uuid}\", which was NOT permitted by ALLOWED_ADMIN_FIELDS and ", level=5, perm=True)
                 return 5
             else:
                 userinput = input(f"Are you sure you want to change Field \"{field}\" to \"{updvalue}\" for UUID \"{subject_uuid}\"?\nType \"Y\" + \"ENTER\" to CONFIRM - Anything else + \"ENTER\" to CANCEL")
                 if userinput.lower() != "y":
-                    log(f"Terminal ABORTED the change of field \"{field}\" for UUID \"{subject_uuid}\".", level=1, perm=True)
+                    log(f"Terminal ABORTED the change of field \"{field}\" for UUID \"{subject_uuid}\".", level=4, perm=True)
                     return 6
                 else:  
                     if not (field in ALLOWED_TERMINAL_FIELDS):
                         userinput = input("Are you SURE you're SURE? This is NOT an AUTHORIZED_TERMINAL_FIELD value.\nType \"Y\" + \"ENTER\" to CONFIRM - Anything else + \"ENTER\" to CANCEL")
                         if userinput.lower() != "y":
-                            log(f"Terminal ABORTED the change of field \"{field}\" for UUID \"{subject_uuid}\" (backup safety check).", level=1, perm=True)
+                            log(f"Terminal ABORTED the change of field \"{field}\" for UUID \"{subject_uuid}\" (backup safety check).", level=4, perm=True)
                             return 6
                         else:
                             # They're SURE...
-                            log(f"Terminal is preparing to change field \"{field}\" for UUID \"{subject_uuid}\".", level=2, perm=True)
+                            log(f"Terminal is preparing to change field \"{field}\" for UUID \"{subject_uuid}\".", level=4, perm=True)
                     else:
                         pass # All OK!
 
@@ -165,22 +183,23 @@ def changeuseraccountinfo(subject_uuid, field, updvalue,initiating_jwt: str, adm
                 session.commit() # Saves to file
 
                 if terminal_override:
-                    log(f"Terminal changed field \"{field}\" for UUID \"{subject_uuid}\".", level=1, perm=True)
+                    log(f"Terminal changed field \"{field}\" for UUID \"{subject_uuid}\".", level=4, perm=True)
                 if admin_perms:
-                    log(f"Admin UUID \"{initiating_jwt}\" changed field \"{field}\" for UUID \"{subject_uuid}\".", level=1, perm=True)
+                    log(f"Admin UUID \"{initiating_jwt}\" changed field \"{field}\" for UUID \"{subject_uuid}\".", level=4, perm=True)
                 else:
-                    log(f"UUID \"{subject_uuid}\" changed field \"{field}\".", level=1, perm=True)
+                    log(f"UUID \"{subject_uuid}\" changed field \"{field}\".", level=4, perm=True)
                 return 0
             
             else: # User does NOT exist in db
                 if admin_perms:
-                    log(f"ABORTED - Admin UUID \"{initiating_jwt}\" tried changing field \"{field}\" for a nonexistant UUID (\"{subject_uuid}\")", level=2, perm=True)
+                    log(f"ABORTED - Admin UUID \"{initiating_jwt}\" tried changing field \"{field}\" for a nonexistant UUID (\"{subject_uuid}\")", level=5, perm=True)
                 else:
-                    log(f"ABORTED - Someone tried changing field \"{field}\" for a nonexistant UUID (\"{subject_uuid}\")", level=3, perm=True) # This should NEVER happen given the previous RegMode checks, so something went wrong in the code.
+                    log(f"ABORTED - Someone tried changing field \"{field}\" for a nonexistant UUID (\"{subject_uuid}\")", level=7, perm=True) # This should NEVER happen given the previous RegMode checks, so something went wrong in the code.
                 return 1
     else: # Not a default allowed field
-        log(f"ABORTED - Someone tried changing field \"{field}\" without Admin perms!", level=2, perm=True)
+        log(f"ABORTED - Someone tried changing field \"{field}\" without Admin perms!", level=5, perm=True)
         return 2
+    """
 
 def changeusersaveddata():
     with Session(engine) as session:
@@ -213,27 +232,28 @@ def getuserbyusername(query_username):
 
 # ----------
 # Security Stuff
-def addjwtid(jwtuuid): # This script is called by ? (TODO)
+def addjwtid(jwtuuid): # This script is called by ? (TODO: Call from auth.py)
     with Session(engine) as session: # Checks for valid UUID
         statement = select(db_users).where(db_users.uuid == jwtuuid)
         result = session.exec(statement).first()
-        if not result: # Inexistant UUID
-            log(f"ABORTED - Attempted to create a JWT for a nonexistant UUID (\"{jwtuuid}\").", level=2, perm=True)
+        if not result: # Inexistant UUID, should not happen
+            log(f"ABORTED - Attempted to create a JWT for a nonexistant UUID (\"{jwtuuid}\").", level=5, perm=True)
             return 1
         result_dict = result.model_dump()
         generated_jwt = sec.generateJWT(jwtuuid, result_dict["username"]) # Generates the JWT
-        with Session(engine) as session: # Add the JWT Token and JTI to db
-            new_jwt = db_jwts(
-                # ID will be autopopulated by SQL
-                uuid = str(jwtuuid),
-                jti = str(generated_jwt["jti"])
-            )
-            # Stage to memory
-            session.add(new_jwt)
-            # Save to file
-            session.commit()
-            # Fetch auto-generated fields
-            session.refresh(new_jwt)
+        # Add the JWT Token and JTI to db
+        new_jwt = db_jwts(
+            # ID will be autopopulated by SQL
+            uuid = str(jwtuuid),
+            jti = str(generated_jwt["jti"])
+        )
+        # Stage to memory
+        session.add(new_jwt)
+        # Save to file
+        session.commit()
+        # Fetch auto-generated fields
+        session.refresh(new_jwt)
+    return str(generated_jwt["jti"])
 
 
 def revokejwtid():
@@ -294,13 +314,49 @@ def changeuserpassword(): # Although changeuseraccountinfo() could handle this, 
 # ----------
 # Startup stuff
 
+# There are two ways to config the sqlite url: a settings.toml file, or a database.db file in root.
+
 # 1. Find the absolute path to this script
 script_dir = Path(__file__).resolve().parent
-# 2. Go up one directory and points to the database file
-database_file = script_dir.parent / "database.db"
+# Go up one directory and points to the settings file
+config_file = script_dir.parent / "config.toml"
 
+# 2. First, try checking for the settings.toml file - If any part of this script fails, it runs the except block which sets the DB file path to root.
+database_file = ""
 # SQLite connection string
-sqlite_url = f"sqlite:///{database_file}"
+sqlite_url = ""
+try:
+    with open(config_file, "rb") as file: # Possible exception, if file is missing (supposed to be in root)
+        # Parse file into a Python dict
+        config = tomllib.load(file)
+
+        # Pull the key value
+        CFG_sqlite_url = config.get("sqlite_url") # TODO: CHANGE TO VAR INSTEAD OF DICT
+        if CFG_sqlite_url and CFG_sqlite_url != "`default`":
+            sqlite_url = CFG_sqlite_url.replace("`script_dir.parent`", str(script_dir.parent)) # Replace any relative paths with actual path. Also, note that the file NEEDS to have the url prefix e.g. "sqlite://"
+        else:
+            raise ValueError("Defaulting to the default db path") # Possible exception - either the line doesnt exist, or the line is "`default`"
+        
+except Exception as e: # Something went wrong, sets database_file to default
+
+    # Checks the exception type. Note that tomllib.TOMLDecodeError is before ValueError since tomllib inherits the error from ValueError
+    if isinstance(e, tomllib.TOMLDecodeError):
+        log("CONFIG: Decode error - config.toml contains invalid TOML.", level=7, perm=True)
+    elif isinstance(e, ValueError):
+        log("CONFIG, SQLITE: Defaulting to the default db path, since \"`default`\" was provided in config field \"sqlite_url\".", perm=False)
+    elif isinstance(e, FileNotFoundError):
+        log("CONFIG: Settings file doesn't exist - defaulting to the default db path.", perm=False)
+    elif isinstance(e, PermissionError):
+        log("CONFIG: Permission error - can not access config file.", level=7, perm=True)
+    else:
+        log(f"CONFIG: Other Error: \"{e}\"", level=7, perm=True)
+    #TODO: Fill out
+    # Go up one directory and points to the database file
+    database_file = script_dir.parent / "database.db"
+    sqlite_url = f"sqlite:///{database_file}"
+
+
+
 
 # Create the SQLModel engine
 engine = create_engine(sqlite_url, echo=False)
