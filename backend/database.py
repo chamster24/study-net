@@ -12,6 +12,23 @@ import tomllib # Config file parsing
 import security as sec
 
 
+# ----------
+# Finds the version
+
+version = ""
+# 1. Find the absolute path to this script
+script_dir = Path(__file__).resolve().parent
+# 2. Go up one directory and points to the version file
+target_file = script_dir.parent / "version.txt"
+
+try:
+    with open(target_file, "r") as file:
+        version = file.read().strip()
+except Exception:
+    version = "*UNKNOWN"
+
+
+
 # --------------------
 # Logging
 def log(message: str, level: int | None = None, perm: bool = False): #TODO: Rewrite to be better, add datetime
@@ -271,7 +288,7 @@ def checkjwt(jwt: str, uuid: str | None):
     """
 
     jwt_verification = sec.verifyJWT(jwt)
-    # Checks status field of main dict
+    # Guard Clause: checks status field of main dict
     if jwt_verification["status"] == False:
         # Determine the issue
         if jwt_verification["details"] == "expired": # Seems like nothing malicious. Return code 2, signaling INVALID but don't become overly protective
@@ -281,8 +298,44 @@ def checkjwt(jwt: str, uuid: str | None):
         else:
             return 1 # Just in case!
 
-        # TODO: delete the below code in `with Session(engine) as session`, and change to check the function given UUID (if provided) and the JTI to see if it's in db (and compare against JWT UUID)
-    
+    # Now, we check specific fields of the JWT.
+    class BigError(Exception):
+        pass
+    class MediumError(Exception):
+        pass
+    try:
+        if not (jwt_verification["data"]["iss"] == "StudyNet"):
+            raise BigError
+        if not (jwt_verification["data"]["version"] == str(version)):
+            raise MediumError
+        if uuid:
+            if not (jwt_verification["data"]["sub"] == uuid):
+                raise BigError
+        # Username wont be checked, as UUID covers it
+        # EXP/IAT also won't be checked, as the JWT decoder automatically checks it
+
+        # Finally, check if the JTI is in DB
+        if (jwt_verification["data"]["jti"]):
+            with Session(engine) as session:
+                statement = select(db_jwts).where(db_jwts.jti == jwt_verification["data"]["jti"]) 
+                result = session.exec(statement).first()
+                if not result:
+                    raise MediumError # The user may have just revoked the JTI     
+        else:
+            raise BigError
+
+        # If no errors trigger, we can return that the JWT is indeed valid.
+        return 0
+        
+    except BigError: # Either the field was non-existant, or was incorrect.
+        return 1
+    except MediumError: # Small things that may not have been caught
+        return 2
+    except Exception: # Should not happen - catch-all
+        return 1
+
+    # TODO: delete the below code in `with Session(engine) as session`, and change to check the function given UUID (if provided) and the JTI to see if it's in db (and compare against JWT UUID)
+
     """
     with Session(engine) as session:
         # 1. Check if the JWT exists in db

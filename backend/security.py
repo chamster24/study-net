@@ -66,10 +66,10 @@ def verifyJWT(token):
     try:
         # Uses JWT to automatically decode the JWT
         payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-        return {"status": True, "data": payload}
+        return {"status": True, "details": "pass", "data": payload}
     except jwt.ExpiredSignatureError:
-        return {"status": False, "details": "expired"}
+        return {"status": False, "details": "expired", "data": {}}
     except jwt.InvalidTokenError:
-        return {"status": False, "details": "invalid"}
+        return {"status": False, "details": "invalid", "data": {}}
     except Exception:
-        return {"status": False, "details": "other"}
+        return {"status": False, "details": "other", "data": {}}
