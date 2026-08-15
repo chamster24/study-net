@@ -31,11 +31,12 @@ except Exception:
 
 # --------------------
 # Logging
-def log(message: str, level: int | None = None, perm: bool = False): #TODO: Rewrite to be better, add datetime
+def log(message: str, level: int | None = None, perm: bool = False): #TODO: Rewrite to be better
     log_file = script_dir.parent / "logs" / "database_log.txt"
+    current_time_utc = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
     LEVEL_PREFIXES = {
         # Fine-grained / Verbose Diagnostic (0-2)
-        0: "       | ",  # Plain continuation / indent
+        0: "        | ",  # Plain continuation / indent
         1: "[TRACE] | ",  # Line-by-line execution details
         2: "[DEBUG] | ",  # Developer troubleshooting info
         # Operational (3-4)
@@ -55,13 +56,13 @@ def log(message: str, level: int | None = None, perm: bool = False): #TODO: Rewr
     }
     eval_level = LEVEL_PREFIXES.get(level, "        | " if perm else "")
 
-
-    loggedmessage = eval_level + message
+    
+    loggedmessage = eval_level + current_time_utc + " | " + message
     if perm:
         log_file.parent.mkdir(parents=True, exist_ok=True)  # Ensures the "logs" folder exists
         with open(log_file, "a") as file: # Auto closes it when done
             file.write(loggedmessage + "\n")
-            print(f"Logged to database_log.txt: \"{loggedmessage}\"")
+            print(f"LOGGED: \"{loggedmessage}\"")
     else:
         print(loggedmessage)
             
@@ -299,18 +300,14 @@ def checkjwt(jwt: str, uuid: str | None):
             return 1 # Just in case!
 
     # Now, we check specific fields of the JWT.
-    class BigError(Exception):
-        pass
-    class MediumError(Exception):
-        pass
     try:
         if not (jwt_verification["data"]["iss"] == "StudyNet"):
-            raise BigError
+            return 1
         if not (jwt_verification["data"]["version"] == str(version)):
-            raise MediumError
+            return 2
         if uuid:
             if not (jwt_verification["data"]["sub"] == uuid):
-                raise BigError
+                return 1
         # Username wont be checked, as UUID covers it
         # EXP/IAT also won't be checked, as the JWT decoder automatically checks it
 
@@ -320,17 +317,12 @@ def checkjwt(jwt: str, uuid: str | None):
                 statement = select(db_jwts).where(db_jwts.jti == jwt_verification["data"]["jti"]) 
                 result = session.exec(statement).first()
                 if not result:
-                    raise MediumError # The user may have just revoked the JTI     
+                    return 2 # The user may have just revoked the JTI     
         else:
-            raise BigError
+            return 1
 
         # If no errors trigger, we can return that the JWT is indeed valid.
         return 0
-        
-    except BigError: # Either the field was non-existant, or was incorrect.
-        return 1
-    except MediumError: # Small things that may not have been caught
-        return 2
     except Exception: # Should not happen - catch-all
         return 1
 
