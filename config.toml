@@ -1,0 +1,6 @@
+# Config File for backend variables. Each list is config settings for it's own backend file, except for [shared]
+
+[shared]
+
+[database]
+    sqlite_url = "`default`"   # The SQLite file path url NEEDS to have the url prefix e.g. "sqlite://". You can also use "`default`" for the script to use the default URL without raising a [NOTIC]
