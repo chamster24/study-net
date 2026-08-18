@@ -148,7 +148,12 @@ def adduser(data: dict): # TODO: Add try to outer, and integretyerror checks to 
         ) or 0
 
         try: # 5. Set the UserNum #TODO
-            getuserbyemail(data["email"])
+            user_result = getuserbyuuid(data["uuid"])
+            if user_result:
+                setattr(user_result, "usernum", int(max_num + 1))
+                session.commit()
+            else: # User should have existed!
+                return 1
             return 0
         except IntegrityError: # sqlalchemy.exc.IntegrityError
             log(f"SQLite: IntegrityError while trying to change usernum for UUID {data["uuid"]}",level=5 ,perm=False) # TODO, recheck maxnum and if maxnum is still the same try to add 1 until it works
