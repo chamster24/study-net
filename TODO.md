@@ -25,6 +25,7 @@
         - Optimize changeuseraccountinfo() and make it more secure (# TODO)
         - fix adduser() ("# TODO: Fix so that instead of returning none, it just doesnt return that line.")
         - Auto delete old JWTs
+        - ADD TRY BLOCKS TO ALL DATABASE MODIFICATION SCRIPTS
 
 # StudyNet FRONTEND
     ## Login.html
