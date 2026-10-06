@@ -1,5 +1,8 @@
 # Copyright 2025 cHamster24   -   Licensed under the MIT License, see LICENSE file for details.
 
+
+# NOTE: THIS FILE IS ARCHIVED. USE IntraChat.py in /backend/routers instead.
+
 from fastapi import FastAPI, WebSocket, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.websockets import WebSocketDisconnect
